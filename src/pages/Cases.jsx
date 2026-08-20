@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion';
-import { useEffect, useState, useLayoutEffect, useRef } from 'react';
-import { ArrowLeft, ExternalLink, Filter, Search, Globe, Shield, Zap, Database } from 'lucide-react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { ArrowLeft, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import Grainient from '../components/Grainient';
+import { HeatmapIcon } from '../components/ShaderPrimitives';
 import Lenis from 'lenis';
 import { useTheme } from '../context/ThemeContext';
 
@@ -75,22 +77,21 @@ const ALL_CASES = [
   }
 ];
 
+const TOC_ITEMS = [
+  { id: 'case-1', label: 'Nexus AI Plataform', width: '16px' },
+  { id: 'case-2', label: 'AgroScale ERP', width: '28px' },
+  { id: 'case-3', label: 'SecureVault API', width: '20px' },
+  { id: 'case-4', label: 'HealthFlow OS', width: '36px' }
+];
+
 const FloatingTOC = ({ isDark }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [activeSection, setActiveSection] = useState('');
 
-  // ITENS DO MENU LATERAL (Sincronize os labels com os nomes dos seus cases acima)
-  const items = [
-    { id: 'case-1', label: 'Nexus AI Plataform', width: '16px' },
-    { id: 'case-2', label: 'AgroScale ERP', width: '28px' },
-    { id: 'case-3', label: 'SecureVault API', width: '20px' },
-    { id: 'case-4', label: 'HealthFlow OS', width: '36px' }
-  ];
-
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY + 250;
-      for (const item of items) {
+      for (const item of TOC_ITEMS) {
         const element = document.getElementById(item.id);
         if (element) {
           const { offsetTop, offsetHeight } = element;
@@ -113,7 +114,7 @@ const FloatingTOC = ({ isDark }) => {
       onClick={() => setIsHovered(!isHovered)}
     >
       <div className="flex flex-col gap-5 md:gap-5">
-        {items.map((item, i) => (
+        {TOC_ITEMS.map((item, i) => (
           <a
             key={i}
             href={`#${item.id}`}
@@ -160,7 +161,6 @@ const FloatingTOC = ({ isDark }) => {
 };
 
 export default function Cases() {
-  const [filter, setFilter] = useState('Todos');
   const { isDark } = useTheme();
   const topRef = useRef(null);
 
@@ -179,7 +179,7 @@ export default function Cases() {
 
     lenis.scrollTo(0, { immediate: true });
 
-    const id = setTimeout(() => {
+    setTimeout(() => {
       lenis.scrollTo(0, { immediate: true });
       window.scrollTo(0, 0);
     }, 10);
@@ -193,16 +193,42 @@ export default function Cases() {
     return () => lenis.destroy();
   }, []);
 
-  const filteredCases = ALL_CASES;
-
   return (
     <div
       ref={topRef}
       id="cases-top"
-      className={`min-h-screen transition-colors duration-700 bg-[var(--bg-color)] text-[var(--text-color)]`}
+      className={`cases-page min-h-screen transition-colors duration-700 bg-[var(--bg-color)] text-[var(--text-color)]`}
     >
-      <Navbar />
-      <FloatingTOC isDark={isDark} />
+      <div className="cases-page__grainient" aria-hidden="true">
+        <Grainient
+          color1={isDark ? '#000043' : '#d0d0d1'}
+          color2={isDark ? '#003f76' : '#468bc9'}
+          color3={isDark ? '#c1dffa' : '#afd8ff'}
+          timeSpeed={0.25}
+          colorBalance={0}
+          warpStrength={1}
+          warpFrequency={5}
+          warpSpeed={2.1}
+          warpAmplitude={50}
+          blendAngle={0}
+          blendSoftness={0.05}
+          rotationAmount={500}
+          noiseScale={2}
+          grainAmount={0}
+          grainScale={2.1}
+          grainAnimated={false}
+          contrast={1.5}
+          gamma={1}
+          saturation={1}
+          centerX={0}
+          centerY={0}
+          zoom={0.9}
+        />
+      </div>
+
+      <div className="cases-page__content">
+        <Navbar />
+        <FloatingTOC isDark={isDark} />
 
       {/* Hero Section */}
       <section className="relative pt-32 md:pt-40 pb-16 md:pb-20 overflow-hidden">
@@ -232,7 +258,7 @@ export default function Cases() {
       <section className="py-16 md:py-20">
         <div className="container mx-auto px-6 max-w-7xl">
           <div className="grid grid-cols-1 gap-20 md:gap-32">
-            {filteredCases.map((item, index) => (
+            {ALL_CASES.map((item, index) => (
               <motion.div
                 key={item.id}
                 id={`case-${item.id}`}
@@ -255,9 +281,10 @@ export default function Cases() {
                       href={item.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="absolute bottom-6 md:bottom-8 right-6 md:right-8 bg-white text-black p-4 md:p-5 rounded-full hover:bg-primary hover:text-white transition-all duration-500 shadow-2xl"
+                      className="case-globe-button absolute bottom-6 md:bottom-8 right-6 md:right-8 bg-white text-black p-4 md:p-5 rounded-full hover:bg-primary hover:text-white transition-all duration-500 shadow-2xl"
                     >
-                      <Globe size={20} md:size={24} />
+                      <HeatmapIcon className="case-globe-button__heatmap" />
+                      <Globe className="relative z-10" size={20} md:size={24} />
                     </a>
                   </div>
                 </div>
@@ -319,7 +346,8 @@ export default function Cases() {
         </div>
       </section>
 
-      <Footer />
+        <Footer />
+      </div>
     </div>
   );
 }

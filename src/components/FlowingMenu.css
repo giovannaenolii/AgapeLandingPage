@@ -1,0 +1,66 @@
+.flowing-menu {
+  width: 100%;
+  overflow: hidden;
+  border-top: 1px solid var(--border-color);
+}
+
+.flowing-menu__item {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid;
+}
+
+.flowing-menu__link {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 180px;
+  align-items: center;
+  gap: 16px;
+  min-height: 112px;
+  padding: 18px 8px;
+  color: var(--text-color);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: clamp(1.7rem, 4vw, 4.4rem);
+  font-weight: 900;
+  letter-spacing: -0.08em;
+  line-height: 0.9;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.flowing-menu__index,
+.flowing-menu__tag {
+  font-family: Inter, sans-serif;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.24em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.flowing-menu__index { color: var(--primary); align-self: start; padding-top: 7px; }
+.flowing-menu__tag { color: currentColor; opacity: 0.48; letter-spacing: 0.16em; text-align: right; }
+
+.flowing-menu__marquee {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transform: translate3d(0, 101%, 0);
+}
+
+.flowing-menu__inner-wrap { width: 100%; height: 100%; overflow: hidden; }
+.flowing-menu__inner { display: flex; align-items: center; width: fit-content; height: 100%; will-change: transform; }
+.flowing-menu__part { display: flex; align-items: center; flex-shrink: 0; }
+.flowing-menu__part > span { padding: 0 1vw; white-space: nowrap; font-size: clamp(1.7rem, 4vw, 4.4rem); font-weight: 900; letter-spacing: -0.08em; text-transform: uppercase; }
+.flowing-menu__image { width: clamp(150px, 18vw, 270px); height: 58px; margin: 0 2vw; border-radius: 999px; background-position: center; background-size: cover; }
+
+@media (max-width: 640px) {
+  .flowing-menu__link { grid-template-columns: 38px minmax(0, 1fr); min-height: 88px; padding: 14px 0; }
+  .flowing-menu__tag { display: none; }
+  .flowing-menu__index { font-size: 8px; }
+  .flowing-menu__image { width: 130px; height: 42px; }
+}

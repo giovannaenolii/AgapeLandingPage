@@ -4,11 +4,15 @@ import Hero from '../components/Hero';
 import Features from '../components/Features';
 import Form from '../components/Form';
 import Footer from '../components/Footer';
+import Grainient from '../components/Grainient';
 import Navbar from '../components/Navbar';
 import ManifestoSection from '../components/ManifestoSection';
 import ProductsInUse from '../components/ProductsInUse';
+import { useTheme } from '../context/ThemeContext';
 
 function Home() {
+  const { isDark } = useTheme();
+
   useEffect(() => {
     const lenis = new Lenis({
       duration: 1.2,
@@ -34,11 +38,34 @@ function Home() {
       </section>
       
       {/* Main Content - Slides over Hero */}
-      <main 
-        style={{ backgroundImage: 'var(--bg-image)' }}
-        className="relative z-10 bg-[var(--bg-color)] bg-cover bg-top shadow-[0_-50px_100px_rgba(0,0,0,0.5)] transition-all duration-700"
-      >
-        <div className="bg-[var(--bg-color)]/20 backdrop-blur-[1px]">
+      <main className={`site-main site-main--${isDark ? 'dark' : 'light'} relative z-10 transition-all duration-700`}>
+        <div className="site-main__grainient" aria-hidden="true">
+          <Grainient
+            color1={isDark ? '#000043' : '#d0d0d1'}
+            color2={isDark ? '#003f76' : '#468bc9'}
+            color3={isDark ? '#c1dffa' : '#afd8ff'}
+            timeSpeed={0.25}
+            colorBalance={0}
+            warpStrength={1}
+            warpFrequency={5}
+            warpSpeed={2.1}
+            warpAmplitude={50}
+            blendAngle={0}
+            blendSoftness={0.05}
+            rotationAmount={500}
+            noiseScale={2}
+            grainAmount={0}
+            grainScale={2.1}
+            grainAnimated={false}
+            contrast={1.5}
+            gamma={1}
+            saturation={1}
+            centerX={0}
+            centerY={0}
+            zoom={0.9}
+          />
+        </div>
+        <div className="site-main__content">
           <Features />
           <ProductsInUse />
           <ManifestoSection />

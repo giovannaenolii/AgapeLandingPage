@@ -9,11 +9,11 @@ export default {
       colors: {
         // COR PRINCIPAL DO SITE (ALTERE O HEXA AQUI)
         primary: {
-          DEFAULT: '#1389D4', 
-          glow: 'rgba(19, 137, 212, 0.4)',
+          DEFAULT: '#2e82d1',
+          glow: 'rgba(46, 130, 209, 0.4)',
         },
         // COR DE DESTAQUE/ACENTO
-        accent: '#49C7E8',
+        accent: '#70d7ff',
         bg: '#000000',
         dark: '#050505',
       },

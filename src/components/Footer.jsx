@@ -1,6 +1,10 @@
-import { motion } from 'framer-motion';
+import { lazy, Suspense } from 'react';
+import DecryptedText from './DecryptedText';
+
+const ShapeBlur = lazy(() => import('./ShapeBlur'));
 
 // LINKS DAS COLUNAS DO RODAPÉ (Altere nomes e links aqui)
+
 const NAV = [
   {
     heading: 'SOLUÇÕES',
@@ -76,6 +80,12 @@ export default function Footer() {
   return (
     <footer className="relative bg-transparent text-[var(--text-color)] border-t border-[var(--border-color)] overflow-hidden">
 
+      <div className="footer-shape-blur">
+        <Suspense fallback={null}>
+          <ShapeBlur variation={2} />
+        </Suspense>
+      </div>
+
       {/* ── Background Watermark ── */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden select-none">
         <span className="font-heading font-black text-[50vw] md:text-[30vw] whitespace-nowrap tracking-tighter opacity-[0.03] uppercase">
@@ -135,7 +145,15 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="py-8 md:py-12 border-t border-[var(--border-color)] flex flex-col md:flex-row items-center justify-between gap-6">
           <p className="text-[8px] md:text-[10px] uppercase tracking-widest opacity-40 font-bold text-center md:text-left">
-            © {year} ÁGAPE SOLUTIONS. TODOS OS DIREITOS RESERVADOS.
+            <DecryptedText
+              text={`© ${year} ÁGAPE SOLUTIONS. TODOS OS DIREITOS RESERVADOS.`}
+              speed={28}
+              maxIterations={6}
+              sequential
+              revealDirection="start"
+              className="text-primary"
+              encryptedClassName="opacity-40"
+            />
           </p>
           <div className="flex flex-wrap justify-center gap-6 md:gap-8">
             <a href="#" className="text-[8px] md:text-[10px] uppercase tracking-widest opacity-20 hover:opacity-100 transition-all font-bold">Política de Privacidade</a>
@@ -146,4 +164,3 @@ export default function Footer() {
     </footer>
   );
 }
-

@@ -6,7 +6,6 @@ export default function Form() {
   const formRef = useRef();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [focused, setFocused] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -91,8 +90,6 @@ export default function Form() {
                     name={field.name}
                     required
                     placeholder={field.placeholder}
-                    onFocus={() => setFocused(field.name)}
-                    onBlur={() => setFocused(null)}
                     className="w-full bg-transparent border-b border-[var(--border-color)] py-2 md:py-3 text-base md:text-lg font-bold focus:outline-none focus:border-primary transition-colors placeholder:opacity-20"
                   />
                 </div>
@@ -106,8 +103,6 @@ export default function Form() {
                   name="message"
                   rows="3"
                   placeholder="Conte-nos sobre seu projeto..."
-                  onFocus={() => setFocused('message')}
-                  onBlur={() => setFocused(null)}
                   className="w-full bg-transparent border-b border-[var(--border-color)] py-2 md:py-3 text-base md:text-lg font-bold focus:outline-none focus:border-primary transition-colors placeholder:opacity-20 resize-none"
                 />
               </div>
@@ -134,7 +129,7 @@ export default function Form() {
                     rel="noopener noreferrer"
                     whileHover={{ y: -2, scale: 1.01 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-fit flex items-center justify-center gap-3 px-8 md:px-12 py-4 border border-[#25D366]/20 bg-[#25D366]/[0.03] hover:bg-[#25D366]/10 text-[#25D366] font-black text-[10px] md:text-xs uppercase tracking-[0.3em] rounded-full transition-all group"
+                    className="w-fit flex items-center justify-center gap-3 px-8 md:px-12 py-4 border border-primary/20 bg-primary/[0.03] hover:bg-primary/10 text-primary font-black text-[10px] md:text-xs uppercase tracking-[0.3em] rounded-full transition-all group"
                   >
                     <MessageCircle size={16} md:size={18} className="group-hover:rotate-12 transition-transform" />
                     <span>Falar via WhatsApp</span>
@@ -149,4 +144,3 @@ export default function Form() {
     </section>
   );
 }
-

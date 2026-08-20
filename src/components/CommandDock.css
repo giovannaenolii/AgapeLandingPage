@@ -1,0 +1,34 @@
+.command-dock {
+  position: fixed;
+  right: 24px;
+  bottom: 0;
+  z-index: 60;
+  display: flex;
+  max-width: calc(100% - 48px);
+  align-items: center;
+  pointer-events: none;
+}
+
+.command-dock__panel {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  width: fit-content;
+  margin-left: auto;
+  padding: 7px 7px 7px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 18px 18px 0 0;
+  background: color-mix(in srgb, var(--bg-color) 86%, transparent);
+  box-shadow: 0 -16px 40px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px) saturate(1.2);
+  pointer-events: auto;
+}
+
+.command-dock__brand { display: flex; align-items: center; gap: 4px; height: 42px; padding: 0 7px 0 4px; border-right: 1px solid var(--border-color); color: var(--primary); font-size: 8px; font-weight: 900; letter-spacing: 0.2em; }
+.command-dock__item { position: relative; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; border: 1px solid var(--border-color); border-radius: 12px; background: var(--card-bg); color: var(--text-color); cursor: pointer; outline: none; }
+.command-dock__item:hover, .command-dock__item:focus-visible { border-color: var(--primary); color: var(--primary); }
+.command-dock__label { position: absolute; top: -30px; left: 50%; width: max-content; padding: 5px 8px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-color); color: var(--text-color); font-size: 8px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; transform: translateX(-50%); }
+@media (max-width: 767px) {
+  .command-dock { display: none; }
+}

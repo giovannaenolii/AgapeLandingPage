@@ -1,18 +1,15 @@
 import { useState, useEffect } from 'react';
 import { motion, useScroll, AnimatePresence } from 'framer-motion';
 import { Sun, Moon, Menu, X } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import GlassSurface from './GlassSurface';
 
 export default function Navbar() {
   const { scrollY } = useScroll();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isDark, setIsDark } = useTheme();
-  const location = useLocation();
-
-  // Verifica se estamos na página de cases
-  const isCasesPage = location.pathname === '/cases';
 
   useEffect(() => {
     return scrollY.on('change', (latest) => {
@@ -30,21 +27,15 @@ export default function Navbar() {
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
-  // Lógica de cores baseada no scroll, tema e página atual
-  // Na Home (ou outras páginas), sem scroll, o texto é branco (para o Hero escuro)
-  // Na página de Cases, queremos que no modo light o texto seja sempre preto (ou respeite o scroll)
+  // A V2 mantém a navegação legível nos dois modos desde o primeiro frame.
   const getTextColor = () => {
     if (isDark) return 'text-white';
-    if (isScrolled) return 'text-black';
-    // Se não houver scroll e estiver no modo light:
-    // Na Home queremos branco (hero escuro), na Cases queremos preto (página clara)
-    return isCasesPage ? 'text-black' : 'text-white';
+    return 'text-black';
   };
 
   const getLogoClass = () => {
     if (isDark) return 'brightness-0 invert';
-    if (isScrolled) return '';
-    return isCasesPage ? '' : 'brightness-0 invert';
+    return '';
   };
 
   return (
@@ -55,13 +46,21 @@ export default function Navbar() {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? 'py-2 md:py-4' : 'py-4 md:py-6'}`}
     >
       <div className="container mx-auto px-4 md:px-12">
-          <div className={`
-            relative flex items-center justify-between rounded-full px-4 md:px-8 py-2 transition-all duration-500
-            ${isScrolled
-              ? 'bg-[var(--bg-color)]/80 backdrop-blur-xl border border-[var(--border-color)] shadow-2xl'
-              : 'bg-transparent'}
-          `}>
-
+        <GlassSurface
+          width="100%"
+          height={isScrolled ? 56 : 64}
+          borderRadius={50}
+          displace={0.5}
+          distortionScale={-180}
+          redOffset={0}
+          greenOffset={10}
+          blueOffset={20}
+          brightness={50}
+          opacity={0.93}
+          mixBlendMode="screen"
+          className="navbar-glass"
+        >
+          <div className="relative flex w-full items-center justify-between px-2 md:px-6">
             {/* Logo do Site (Altere o caminho da imagem aqui) */}
             <a href="/" className="flex items-center group">
               <img 
@@ -95,7 +94,7 @@ export default function Navbar() {
               <button
                 onClick={() => setIsDark(!isDark)}
                 className={`p-2 rounded-full transition-all duration-300 
-                  ${(isDark || (!isScrolled && !isCasesPage)) ? 'bg-white/10 text-white hover:bg-primary' : 'bg-black/5 text-black hover:bg-primary hover:text-white'}
+                  ${isDark ? 'bg-white/10 text-white hover:bg-primary' : 'bg-black/5 text-black hover:bg-primary hover:text-white'}
                   `}
                 aria-label="Toggle theme"
               >
@@ -120,6 +119,7 @@ export default function Navbar() {
               </button>
             </div>
           </div>
+        </GlassSurface>
       </div>
 
       {/* Mobile Menu Overlay */}

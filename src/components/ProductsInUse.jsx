@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
-import { ExternalLink, ArrowUpRight } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import DecryptedText from './DecryptedText';
+import FlowingMenu from './FlowingMenu';
 
 // LISTA DE CASES EM DESTAQUE (Altere títulos, tags, descrições, imagens e links aqui)
 const PRODUCTS = [
@@ -52,10 +54,20 @@ export default function ProductsInUse() {
             className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8"
           >
             <div className="max-w-3xl">
-              <span className="text-[10px] md:text-[12px] font-black uppercase tracking-[0.5em] text-primary mb-4 md:mb-6 block">Cases de Sucesso</span>
-              <h2 className="font-heading font-black text-5xl md:text-8xl leading-[0.85] tracking-tighter">
-                Transformação na <br />
-                <span className="text-primary italic">Prática.</span>
+              <span className="section-eyebrow mb-4 md:mb-6 block">02 / Cases de sucesso</span>
+              <h2 className="font-heading font-black text-4xl md:text-7xl leading-[0.85] tracking-tighter">
+                <span className="whitespace-nowrap">Onde a engenharia</span><br />
+                <DecryptedText
+                  text="ganha forma."
+                  speed={95}
+                  maxIterations={6}
+                  sequential
+                  revealDirection="start"
+                  replayOnView
+                  parentClassName="text-primary italic"
+                  className="text-primary"
+                  encryptedClassName="text-primary opacity-40"
+                />
               </h2>
             </div>
             <p className="text-lg md:text-xl opacity-60 max-w-lg md:max-w-xs mb-2">
@@ -64,55 +76,31 @@ export default function ProductsInUse() {
           </motion.div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
-          {PRODUCTS.map((product, i) => (
-            <motion.a
-              key={product.title}
-              href={product.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="group cursor-pointer flex flex-col h-full"
-            >
-              <div className="relative aspect-[4/5] mb-6 md:mb-8 overflow-hidden rounded-[2rem] bg-[var(--border-color)] flex-shrink-0">
-                <img
-                  src={product.image}
-                  alt={product.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-all duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-color)] via-transparent to-transparent opacity-60" />
-                <div className="absolute bottom-6 md:bottom-8 left-6 md:left-8 right-6 md:right-8 flex justify-between items-end">
-                  <div className="bg-white/10 backdrop-blur-md border border-white/20 p-3 md:p-4 rounded-2xl">
-                    <ArrowUpRight size={20} className="text-white group-hover:rotate-45 transition-transform duration-500" />
-                  </div>
-                </div>
-              </div>
+        <div className="products-flowing">
+          <FlowingMenu
+            items={PRODUCTS.map((product, index) => ({
+              text: product.title,
+              tag: product.tag,
+              image: product.image,
+              link: product.link,
+              external: true,
+              index: `0${index + 1}`,
+            }))}
+          />
+        </div>
 
-              <div className="p-4 md:p-6 flex flex-col flex-grow">
-                <div className="flex justify-between items-start mb-4 md:mb-6 min-h-[4.5rem] md:min-h-[7rem]">
-                  <div className="flex-grow">
-                    <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-primary mb-2 block">{product.tag}</span>
-                    <h3 className="text-2xl md:text-4xl font-heading font-black tracking-tighter uppercase leading-[0.9]">{product.title}</h3>
-                  </div>
-                  <div className="opacity-20 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-4">
-                    <ExternalLink size={20} />
-                  </div>
-                </div>
-                <p className="text-sm md:text-base opacity-60 leading-tight mb-8 md:mb-10 max-w-md min-h-[4rem] md:min-h-[5rem]">
-                  {product.description}
-                </p>
-                <div className="flex flex-wrap gap-2 md:gap-3 mt-auto">
-                  {product.features.map(feature => (
-                    <span key={feature} className="text-[8px] md:text-[9px] font-bold border border-[var(--border-color)] px-2 md:px-3 py-1 rounded-full uppercase tracking-wider">
-                      {feature}
-                    </span>
-                  ))}
-                </div>
+        <div className="products-notes grid grid-cols-1 md:grid-cols-3 border-b border-[var(--border-color)]">
+          {PRODUCTS.map((product, index) => (
+            <div key={product.title} className="products-note p-6 md:p-8">
+              <div className="flex items-center justify-between gap-4 mb-5">
+                <span className="text-[9px] font-black uppercase tracking-[0.22em] text-primary">0{index + 1} / {product.tag}</span>
+                <ExternalLink size={15} className="opacity-40" />
               </div>
-            </motion.a>
+              <p className="text-sm leading-relaxed opacity-60 mb-6">{product.description}</p>
+              <div className="flex flex-wrap gap-2">
+                {product.features.map((feature) => <span key={feature} className="text-[8px] font-bold uppercase tracking-wider opacity-60">{feature}</span>)}
+              </div>
+            </div>
           ))}
         </div>
 
@@ -124,7 +112,7 @@ export default function ProductsInUse() {
         >
           <button
             onClick={handleSeeAll}
-            className="group relative px-10 py-5 bg-primary text-white font-black uppercase tracking-[0.2em] text-[11px] rounded-full hover:scale-105 transition-all duration-500 flex items-center gap-4 cursor-pointer overflow-hidden shadow-[0_0_40px_rgba(0,115,230,0.3)] hover:shadow-[0_0_60px_rgba(0,115,230,0.6)]"
+            className="group relative px-10 py-5 bg-primary text-white font-black uppercase tracking-[0.2em] text-[11px] rounded-full hover:scale-105 transition-all duration-500 flex items-center gap-4 cursor-pointer overflow-hidden shadow-[0_0_40px_rgba(46,130,209,0.3)] hover:shadow-[0_0_60px_rgba(46,130,209,0.55)]"
           >
             <div className="absolute inset-0 bg-white/20 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]" />
             <span className="relative z-10">Ver Todos os Cases</span>
