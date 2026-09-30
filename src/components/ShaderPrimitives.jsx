@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Heatmap, NeuroNoise, PaperTexture } from '@paper-design/shaders-react';
 import { useTheme } from '../context/ThemeContext';
+import { isLowPowerDevice, supportsWebGL2 } from '../utils/devicePerformance';
 
 const HEATMAP_LOGO = 'https://shaders.paper.design/images/logos/diamond.svg';
 const HEATMAP_COLORS = ['#112069', '#1f3ca3', '#3265e7', '#6bd8ff', '#ffffff', '#1f3ca3', '#18284e'];
@@ -121,10 +122,12 @@ function useTransparentIconAsset(source) {
   return preparedSource;
 }
 
-export function NeuroBackdrop({ className = '', strength = 'hero', interactive = true }) {
+export function NeuroBackdrop({ className = '', strength = 'hero', interactive = true, active = true }) {
   const { isDark } = useTheme();
   const prefersReducedMotion = useReducedMotionPreference();
-  const pointer = usePointerParallax(strength === 'hero' && !prefersReducedMotion && interactive);
+  const lowPowerDevice = isLowPowerDevice();
+  const webGL2Available = supportsWebGL2();
+  const pointer = usePointerParallax(webGL2Available && strength === 'hero' && !prefersReducedMotion && active && interactive);
   const shaderConfig = isDark
     ? {
         front: '#e5eeff',
@@ -149,10 +152,13 @@ export function NeuroBackdrop({ className = '', strength = 'hero', interactive =
       style={{
         '--shader-parallax-x': `${pointer.x * 18}px`,
         '--shader-parallax-y': `${pointer.y * 18}px`,
+        background: webGL2Available
+          ? undefined
+          : `radial-gradient(ellipse at 52% 54%, ${isDark ? 'rgba(31,60,163,.3)' : 'rgba(20,142,255,.22)'}, transparent 70%)`,
       }}
       aria-hidden="true"
     >
-      <NeuroNoise
+      {webGL2Available && <NeuroNoise
         width="100%"
         height="100%"
         colorFront={shaderConfig.front}
@@ -160,21 +166,24 @@ export function NeuroBackdrop({ className = '', strength = 'hero', interactive =
         colorBack={shaderConfig.back}
         brightness={shaderConfig.brightness}
         contrast={shaderConfig.contrast}
-        speed={prefersReducedMotion ? 0 : shaderConfig.speed}
+        speed={prefersReducedMotion || !active ? 0 : shaderConfig.speed}
         scale={strength === 'hero' ? 0.95 : 0.7}
         offsetX={interactive ? pointer.x * 0.26 : 0}
         offsetY={interactive ? pointer.y * 0.26 : 0}
         fit="cover"
-        maxPixelCount={strength === 'hero' ? 520000 : 90000}
-      />
+        maxPixelCount={lowPowerDevice
+          ? (strength === 'hero' ? 320000 : 70000)
+          : (strength === 'hero' ? 520000 : 90000)}
+      />}
     </div>
   );
 }
 
-export function WaveField({ className = '', interactive = true }) {
+export function WaveField({ className = '', interactive = true, active = true }) {
   const canvasRef = useRef(null);
   const { isDark } = useTheme();
   const prefersReducedMotion = useReducedMotionPreference();
+  const lowPowerDevice = isLowPowerDevice();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -185,19 +194,27 @@ export function WaveField({ className = '', interactive = true }) {
 
     const pointer = { x: 0.5, y: 0.42 };
     const targetPointer = { x: 0.5, y: 0.42 };
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, lowPowerDevice ? 1 : 1.5);
+    const minimumFrameDuration = lowPowerDevice ? 1000 / 24 : 0;
     let width = 0;
     let height = 0;
     let animationFrame = null;
     let time = 0;
     let previousTime = 0;
+    let lastDrawTime = 0;
 
-    const resize = () => {
+    const resizeCanvas = () => {
       width = canvas.clientWidth;
       height = canvas.clientHeight;
       canvas.width = Math.max(1, Math.floor(width * pixelRatio));
       canvas.height = Math.max(1, Math.floor(height * pixelRatio));
       context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    };
+
+    const scheduleFrame = () => {
+      if (active && !prefersReducedMotion && !document.hidden && animationFrame === null) {
+        animationFrame = requestAnimationFrame(render);
+      }
     };
 
     const handlePointerMove = (event) => {
@@ -207,8 +224,17 @@ export function WaveField({ className = '', interactive = true }) {
     };
 
     const render = (frameTime = 0) => {
+      animationFrame = null;
+      if (document.hidden) return;
+
+      if (lowPowerDevice && lastDrawTime && frameTime - lastDrawTime < minimumFrameDuration) {
+        scheduleFrame();
+        return;
+      }
+
       const delta = previousTime ? Math.min(48, frameTime - previousTime) / 1000 : 0;
       previousTime = frameTime;
+      lastDrawTime = frameTime;
       time += delta;
 
       pointer.x += (targetPointer.x - pointer.x) * 0.065;
@@ -218,7 +244,10 @@ export function WaveField({ className = '', interactive = true }) {
 
       const cursorX = pointer.x * width;
       const cursorY = pointer.y * height;
-      const lineCount = width < 700 ? 20 : 30;
+      const lineCount = lowPowerDevice
+        ? (width < 700 ? 12 : 18)
+        : (width < 700 ? 20 : 30);
+      const pointSpacing = lowPowerDevice ? 28 : 18;
       const color = isDark ? '113, 190, 255' : '30, 113, 190';
 
       for (let line = 0; line < lineCount; line += 1) {
@@ -228,7 +257,7 @@ export function WaveField({ className = '', interactive = true }) {
         const opacity = (0.08 + depth * 0.14) * (isDark ? 1 : 0.72);
 
         context.beginPath();
-        for (let x = -36; x <= width + 36; x += 18) {
+        for (let x = -36; x <= width + 36; x += pointSpacing) {
           const distance = Math.hypot(x - cursorX, baseY - cursorY);
           const cursorInfluence = Math.exp(-distance / Math.max(width, height) * 2.4);
           const cursorWave = Math.sin(distance * 0.035 - time * 3.2) * 22 * cursorInfluence;
@@ -245,28 +274,52 @@ export function WaveField({ className = '', interactive = true }) {
         context.stroke();
       }
 
-      if (!prefersReducedMotion) animationFrame = requestAnimationFrame(render);
+      scheduleFrame();
     };
 
-    resize();
-    window.addEventListener('resize', resize);
-    if (interactive) window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    const handleResize = () => {
+      resizeCanvas();
+      if (active && !prefersReducedMotion) scheduleFrame();
+      else render();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+        return;
+      }
+
+      previousTime = 0;
+      lastDrawTime = 0;
+      if (active && !prefersReducedMotion) scheduleFrame();
+      else render();
+    };
+
+    resizeCanvas();
+    window.addEventListener('resize', handleResize);
+    if (interactive && active) window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     render();
 
     return () => {
-      window.removeEventListener('resize', resize);
+      window.removeEventListener('resize', handleResize);
       if (interactive) window.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (animationFrame !== null) cancelAnimationFrame(animationFrame);
     };
-  }, [interactive, isDark, prefersReducedMotion]);
+  }, [active, interactive, isDark, prefersReducedMotion, lowPowerDevice]);
 
   return <canvas ref={canvasRef} className={`wave-field ${className}`} aria-hidden="true" />;
 }
 
 export function PaperGrain({ className = '' }) {
+  const lowPowerDevice = isLowPowerDevice();
+  const webGL2Available = supportsWebGL2();
+
   return (
     <div className={`shader-grain ${className}`} aria-hidden="true">
-      <PaperTexture
+      {webGL2Available && <PaperTexture
         width="100%"
         height="100%"
         colorBack="#00000000"
@@ -284,8 +337,8 @@ export function PaperGrain({ className = '' }) {
         seed={6}
         scale={1.5}
         fit="cover"
-        maxPixelCount={180000}
-      />
+        maxPixelCount={lowPowerDevice ? 90000 : 180000}
+      />}
     </div>
   );
 }
@@ -305,7 +358,8 @@ export function HeatmapIcon({
   offsetX = 0,
 }) {
   const prefersReducedMotion = useReducedMotionPreference();
-  const preparedImage = useTransparentIconAsset(image);
+  const webGL2Available = supportsWebGL2();
+  const preparedImage = useTransparentIconAsset(webGL2Available ? image : '');
 
   return (
     <div className={`heatmap-icon ${className}`} aria-hidden="true">

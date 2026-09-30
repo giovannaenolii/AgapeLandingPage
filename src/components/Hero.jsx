@@ -1,15 +1,37 @@
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
-import { NeuroBackdrop, PaperGrain, WaveField } from './ShaderPrimitives';
+
+const NeuroBackdrop = lazy(() => import('./ShaderPrimitives').then((module) => ({ default: module.NeuroBackdrop })));
+const PaperGrain = lazy(() => import('./ShaderPrimitives').then((module) => ({ default: module.PaperGrain })));
+const WaveField = lazy(() => import('./ShaderPrimitives').then((module) => ({ default: module.WaveField })));
 
 export default function Hero() {
   const { isDark } = useTheme();
+  const [backgroundActive, setBackgroundActive] = useState(true);
+
+  useEffect(() => {
+    const updateBackgroundActivity = () => {
+      setBackgroundActive(window.scrollY < window.innerHeight);
+    };
+
+    updateBackgroundActivity();
+    window.addEventListener('scroll', updateBackgroundActivity, { passive: true });
+    window.addEventListener('resize', updateBackgroundActivity);
+
+    return () => {
+      window.removeEventListener('scroll', updateBackgroundActivity);
+      window.removeEventListener('resize', updateBackgroundActivity);
+    };
+  }, []);
 
   return (
     <section className={`hero-shell relative h-screen w-full flex items-center overflow-hidden ${isDark ? 'hero-shell--dark' : 'hero-shell--light'}`}>
-      <NeuroBackdrop interactive={false} />
-      <WaveField interactive={false} />
-      <PaperGrain className="opacity-[0.18] mix-blend-soft-light" />
+      <Suspense fallback={null}>
+        <NeuroBackdrop interactive={false} active={backgroundActive} />
+        <WaveField interactive={false} active={backgroundActive} />
+        <PaperGrain className="opacity-[0.18] mix-blend-soft-light" />
+      </Suspense>
       <div className="hero-vignette" />
 
       <div className="relative z-10 mx-auto w-full max-w-[1480px] px-6 py-24 md:px-12 lg:py-12">

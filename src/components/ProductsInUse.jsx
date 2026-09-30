@@ -1,8 +1,8 @@
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DecryptedText from './DecryptedText';
-import FlowingMenu from './FlowingMenu';
 
 // LISTA DE CASES EM DESTAQUE (Altere títulos, tags, descrições, imagens e links aqui)
 const PRODUCTS = [
@@ -34,6 +34,36 @@ const PRODUCTS = [
 
 export default function ProductsInUse() {
   const navigate = useNavigate();
+  const flowingMenuRef = useRef(null);
+  const [FlowingMenuComponent, setFlowingMenuComponent] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadMenu = () => {
+      import('./FlowingMenu').then(({ default: Component }) => {
+        if (!cancelled) setFlowingMenuComponent(() => Component);
+      });
+    };
+
+    const menuContainer = flowingMenuRef.current;
+    if (!menuContainer || !('IntersectionObserver' in window)) {
+      loadMenu();
+      return () => { cancelled = true; };
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        observer.disconnect();
+        loadMenu();
+      }
+    }, { rootMargin: '400px 0px' });
+
+    observer.observe(menuContainer);
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+    };
+  }, []);
 
   const handleSeeAll = (e) => {
     e.preventDefault();
@@ -76,8 +106,8 @@ export default function ProductsInUse() {
           </motion.div>
         </div>
 
-        <div className="products-flowing">
-          <FlowingMenu
+        <div ref={flowingMenuRef} className="products-flowing">
+          {FlowingMenuComponent && <FlowingMenuComponent
             items={PRODUCTS.map((product, index) => ({
               text: product.title,
               tag: product.tag,
@@ -86,7 +116,7 @@ export default function ProductsInUse() {
               external: true,
               index: `0${index + 1}`,
             }))}
-          />
+          />}
         </div>
 
         <div className="products-notes grid grid-cols-1 md:grid-cols-3 border-b border-[var(--border-color)]">

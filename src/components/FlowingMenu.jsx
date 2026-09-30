@@ -19,6 +19,7 @@ function FlowingMenuItem({ item, speed, textColor, marqueeBgColor, marqueeTextCo
   const marqueeRef = useRef(null);
   const marqueeInnerRef = useRef(null);
   const animationRef = useRef(null);
+  const isHoveredRef = useRef(false);
   const [repetitions, setRepetitions] = useState(4);
 
   useEffect(() => {
@@ -43,13 +44,17 @@ function FlowingMenuItem({ item, speed, textColor, marqueeBgColor, marqueeTextCo
       duration: speed,
       ease: 'none',
       repeat: -1,
+      paused: true,
     });
+    if (isHoveredRef.current) animationRef.current.play();
 
     return () => animationRef.current?.kill();
   }, [item.text, repetitions, speed]);
 
   const handleEnter = (event) => {
     if (!itemRef.current || !marqueeRef.current || !marqueeInnerRef.current) return;
+    isHoveredRef.current = true;
+    animationRef.current?.play();
     const rect = itemRef.current.getBoundingClientRect();
     const edge = findClosestEdge(event.clientX - rect.left, event.clientY - rect.top, rect.width, rect.height);
 
@@ -61,6 +66,8 @@ function FlowingMenuItem({ item, speed, textColor, marqueeBgColor, marqueeTextCo
 
   const handleLeave = (event) => {
     if (!itemRef.current || !marqueeRef.current || !marqueeInnerRef.current) return;
+    isHoveredRef.current = false;
+    animationRef.current?.pause();
     const rect = itemRef.current.getBoundingClientRect();
     const edge = findClosestEdge(event.clientX - rect.left, event.clientY - rect.top, rect.width, rect.height);
 
@@ -90,7 +97,14 @@ function FlowingMenuItem({ item, speed, textColor, marqueeBgColor, marqueeTextCo
             {[...Array(repetitions)].map((_, index) => (
               <div className="flowing-menu__part" key={index} style={{ color: marqueeTextColor }}>
                 <span>{item.text}</span>
-                <div className="flowing-menu__image" style={{ backgroundImage: `url(${item.image})` }} />
+                <img
+                  className="flowing-menu__image"
+                  src={item.image}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  draggable="false"
+                />
               </div>
             ))}
           </div>

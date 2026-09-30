@@ -1,31 +1,90 @@
-import { useEffect } from 'react';
-import Lenis from 'lenis';
+import { useEffect, useRef, useState } from 'react';
 import Hero from '../components/Hero';
 import Features from '../components/Features';
 import Form from '../components/Form';
 import Footer from '../components/Footer';
-import Grainient from '../components/Grainient';
 import Navbar from '../components/Navbar';
 import ManifestoSection from '../components/ManifestoSection';
 import ProductsInUse from '../components/ProductsInUse';
 import { useTheme } from '../context/ThemeContext';
+import { isLowPowerDevice, prefersReducedMotion } from '../utils/devicePerformance';
+
+function DeferredGrainient({ className, ...grainientProps }) {
+  const containerRef = useRef(null);
+  const [GrainientComponent, setGrainientComponent] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadGrainient = () => {
+      import('../components/Grainient').then(({ default: Component }) => {
+        if (!cancelled) setGrainientComponent(() => Component);
+      }).catch(() => {});
+    };
+
+    const container = containerRef.current;
+    if (!container || !('IntersectionObserver' in window)) {
+      loadGrainient();
+      return () => { cancelled = true; };
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.intersectionRatio >= 0.01) {
+        observer.disconnect();
+        loadGrainient();
+      }
+    }, { threshold: 0.01 });
+
+    observer.observe(container);
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+    };
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className={className}
+      aria-hidden="true"
+      style={{ background: `linear-gradient(135deg, ${grainientProps.color1}, ${grainientProps.color2}, ${grainientProps.color3})` }}
+    >
+      {GrainientComponent && <GrainientComponent {...grainientProps} />}
+    </div>
+  );
+}
 
 function Home() {
   const { isDark } = useTheme();
 
   useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    if (isLowPowerDevice() || prefersReducedMotion()) return undefined;
+
+    let lenis = null;
+    let animationFrame = null;
+    let cancelled = false;
+
+    import('lenis').then(({ default: Lenis }) => {
+      if (cancelled) return;
+
+      lenis = new Lenis({
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      });
+
+      const raf = (time) => {
+        lenis.raf(time);
+        animationFrame = requestAnimationFrame(raf);
+      };
+      animationFrame = requestAnimationFrame(raf);
+    }).catch(() => {
+      // Native scrolling remains available if the optional smooth-scroll chunk fails.
     });
 
-    function raf(time) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-
-    requestAnimationFrame(raf);
-    return () => lenis.destroy();
+    return () => {
+      cancelled = true;
+      if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+      lenis?.destroy();
+    };
   }, []);
 
   return (
@@ -39,8 +98,8 @@ function Home() {
       
       {/* Main Content - Slides over Hero */}
       <main className={`site-main site-main--${isDark ? 'dark' : 'light'} relative z-10 transition-all duration-700`}>
-        <div className="site-main__grainient" aria-hidden="true">
-          <Grainient
+        <DeferredGrainient
+          className="site-main__grainient"
             color1={isDark ? '#000043' : '#d0d0d1'}
             color2={isDark ? '#003f76' : '#468bc9'}
             color3={isDark ? '#c1dffa' : '#afd8ff'}
@@ -63,8 +122,7 @@ function Home() {
             centerX={0}
             centerY={0}
             zoom={0.9}
-          />
-        </div>
+        />
         <div className="site-main__content">
           <Features />
           <ProductsInUse />

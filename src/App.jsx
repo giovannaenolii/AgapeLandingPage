@@ -1,8 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { useEffect, useLayoutEffect } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect } from 'react';
 import Home from './pages/Home';
-import Cases from './pages/Cases';
 import { ThemeProvider } from './context/ThemeContext';
+
+const Cases = lazy(() => import('./pages/Cases'));
 
 let isFirstLoad = true;
 
@@ -84,10 +85,12 @@ function App() {
     <ThemeProvider>
       <Router>
         <ScrollToTop />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/cases" element={<Cases />} />
-        </Routes>
+        <Suspense fallback={null}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/cases" element={<Cases />} />
+          </Routes>
+        </Suspense>
       </Router>
     </ThemeProvider>
   );

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Mesh, Program, Renderer, Triangle } from 'ogl';
+import { isLowPowerDevice, prefersReducedMotion, supportsWebGL2 } from '../utils/devicePerformance';
 import './Grainient.css';
 
 const hexToRgb = (hex) => {
@@ -128,18 +129,27 @@ export default function Grainient({
   className = '',
 }) {
   const containerRef = useRef(null);
+  const lowPowerDevice = isLowPowerDevice();
+  const reduceMotion = prefersReducedMotion();
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return undefined;
+    if (!container || !supportsWebGL2()) return undefined;
 
-    const renderer = new Renderer({
-      webgl: 2,
-      alpha: true,
-      antialias: false,
-      dpr: Math.min(window.devicePixelRatio || 1, 1.5),
-    });
+    let renderer;
+    try {
+      renderer = new Renderer({
+        webgl: 2,
+        alpha: true,
+        antialias: false,
+        dpr: Math.min(window.devicePixelRatio || 1, lowPowerDevice ? 1 : 1.5),
+      });
+    } catch {
+      return undefined;
+    }
+
     const gl = renderer.gl;
+    if (!gl) return undefined;
     const canvas = gl.canvas;
     canvas.style.width = '100%';
     canvas.style.height = '100%';
@@ -195,23 +205,38 @@ export default function Grainient({
     setSize();
 
     let animationFrame = 0;
+    let lastRenderedTime = 0;
     let isVisible = true;
     let isPageVisible = !document.hidden;
     const startTime = performance.now();
+    const minimumFrameInterval = lowPowerDevice ? 1000 / 24 : 0;
 
     const render = (time) => {
+      animationFrame = 0;
+      if (!isVisible || !isPageVisible) return;
+
+      if (lowPowerDevice && lastRenderedTime && time - lastRenderedTime < minimumFrameInterval) {
+        animationFrame = requestAnimationFrame(render);
+        return;
+      }
+
+      lastRenderedTime = time;
       program.uniforms.iTime.value = (time - startTime) * 0.001;
       renderer.render({ scene: mesh });
-      animationFrame = requestAnimationFrame(render);
+      if (!reduceMotion) animationFrame = requestAnimationFrame(render);
     };
     const tryStart = () => {
-      if (isVisible && isPageVisible && animationFrame === 0) animationFrame = requestAnimationFrame(render);
+      if (isVisible && isPageVisible && !reduceMotion && animationFrame === 0) {
+        lastRenderedTime = 0;
+        animationFrame = requestAnimationFrame(render);
+      }
     };
     const tryStop = () => {
       if (animationFrame !== 0) {
         cancelAnimationFrame(animationFrame);
         animationFrame = 0;
       }
+      lastRenderedTime = 0;
     };
 
     const intersectionObserver = new IntersectionObserver(([entry]) => {
@@ -242,7 +267,7 @@ export default function Grainient({
       }
       gl.getExtension('WEBGL_lose_context')?.loseContext();
     };
-  }, []);
+  }, [lowPowerDevice, reduceMotion]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -273,12 +298,19 @@ export default function Grainient({
     uniforms.uColor1.value = new Float32Array(hexToRgb(color1));
     uniforms.uColor2.value = new Float32Array(hexToRgb(color2));
     uniforms.uColor3.value = new Float32Array(hexToRgb(color3));
+    if (reduceMotion) context.renderer.render({ scene: context.mesh });
   }, [
     timeSpeed, colorBalance, warpStrength, warpFrequency, warpSpeed,
     warpAmplitude, blendAngle, blendSoftness, rotationAmount, noiseScale,
     grainAmount, grainScale, grainAnimated, contrast, gamma, saturation,
-    centerX, centerY, zoom, color1, color2, color3,
+    centerX, centerY, zoom, color1, color2, color3, reduceMotion,
   ]);
 
-  return <div ref={containerRef} className={`grainient-container ${className}`.trim()} />;
+  return (
+    <div
+      ref={containerRef}
+      className={`grainient-container ${className}`.trim()}
+      style={{ background: `linear-gradient(135deg, ${color1}, ${color2}, ${color3})` }}
+    />
+  );
 }

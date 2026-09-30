@@ -53,10 +53,11 @@
 }
 
 .flowing-menu__inner-wrap { width: 100%; height: 100%; overflow: hidden; }
-.flowing-menu__inner { display: flex; align-items: center; width: fit-content; height: 100%; will-change: transform; }
+.flowing-menu__inner { display: flex; align-items: center; width: fit-content; height: 100%; }
+.flowing-menu__item:hover .flowing-menu__inner { will-change: transform; }
 .flowing-menu__part { display: flex; align-items: center; flex-shrink: 0; }
 .flowing-menu__part > span { padding: 0 1vw; white-space: nowrap; font-size: clamp(1.7rem, 4vw, 4.4rem); font-weight: 900; letter-spacing: -0.08em; text-transform: uppercase; }
-.flowing-menu__image { width: clamp(150px, 18vw, 270px); height: 58px; margin: 0 2vw; border-radius: 999px; background-position: center; background-size: cover; }
+.flowing-menu__image { display: block; flex: 0 0 auto; width: clamp(150px, 18vw, 270px); height: 58px; margin: 0 2vw; border-radius: 999px; object-fit: cover; }
 
 @media (max-width: 640px) {
   .flowing-menu__link { grid-template-columns: 38px minmax(0, 1fr); min-height: 88px; padding: 14px 0; }
